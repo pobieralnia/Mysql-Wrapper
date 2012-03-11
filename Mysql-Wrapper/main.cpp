@@ -9,11 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <Windows.h>	// For mysql.h to run on Windows
-#ifdef __LCC__ 
-#include <winsock.h>	// For windows if __LCC__ is defined (default - winsock.h is included in mysql.h)
-#endif 
-#include <mysql.h>
+#include <string>
 
 // Addtional
 #include "dbWrapperClass.h"
@@ -24,7 +20,17 @@ int main(void)
 {
 	DB_wrapper object;
 	object.init();
-	
+	object.get_result("SELECT * FROM users_panel");
+
+	while (object.fetch_row())
+	{
+		cout << "W srodku" << endl;
+		string name = object.get_value(2);
+		printf("User %s\n", name.c_str() );
+	}
+
+	object.free();
+
 	system("PAUSE");
 	return 0;
 }

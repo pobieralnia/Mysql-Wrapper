@@ -8,7 +8,6 @@
 
 #include "dbWrapperClass.h"
 
-
 /**
  * Constructor
  * - we set NULL to all main variables for mysql
@@ -75,19 +74,80 @@ bool DB_wrapper::free(bool check)
 	 return false;
 }
 
-MYSQL_RES * DB_wrapper::fetch_all(const char * c)
+/**
+ * Fetch all rows in query
+ *
+ * @return		pointer array
+ */
+MYSQL_RES * DB_wrapper::get_result(const char * c)
 {
-	//query the database
-	if(mysql_query(this->m_conn,c))
+	if (this->query(c))
 	{
-		fprintf(stderr, "%s\n", mysql_error(m_conn));
-		exit(0);
+		this->m_result = mysql_store_result(this->m_conn);
+
+		if (this->m_result)
+		{
+			m_number_fields = mysql_num_fields(this->m_result);
+		}
 	}
 
-	this->m_result = mysql_store_result(this->m_conn);
-	* m_number_fields = mysql_num_fields(this->m_result);
-
 	return this->m_result;
+}
+
+/**
+ * Execute sql query
+ *
+ * @param		char
+ * @return		bool
+ */
+bool DB_wrapper::query(const char * c)
+{
+	// query the database
+	if(mysql_query(this->m_conn,c))
+	{
+		return false;
+	}
+	else
+		return true;
+
+}
+
+/**
+ * Row the query result
+ *
+ * @return		mixed ? string : NULL
+ */
+MYSQL_ROW DB_wrapper::fetch_row()
+{
+	this->m_row_counter = 0; // init counter for rows
+	return this->m_result ? (this->m_row = mysql_fetch_row(this->m_result)) : NULL;
+}
+
+
+/**
+ * Get value of current row
+ *
+ * @param		int
+ * @return		mixed ? string : NULL
+ */
+const char * DB_wrapper::get_value(int x)
+{ 
+	if (this->m_result && this->m_row)
+	{
+		return this->m_row[x] ? this->m_row[x] : "";
+	}
+
+	return NULL;
+}
+
+/**
+ * Get default value
+ *
+ * @return		mixed ? string : NULL
+ */
+const char * DB_wrapper::get_value()
+{
+	return this->get_value(this->m_row_counter++);
 }
 
 /**
@@ -99,7 +159,7 @@ int DB_wrapper::num_fields()
 {
 	if (this->m_result)
 	{
-		return * m_number_fields;
+		return m_number_fields;
 	}
 	else
 		return 0;
@@ -122,12 +182,13 @@ int DB_wrapper::init(void)
 	 //something went wrong with the socket
 	 if (!this->m_conn)
 	 {
+		 printf("Error");
 	 }
 
 	 //try connecting to the database  
 	 if(!mysql_real_connect(this->m_conn, DB_HOST, DB_USERNAME, DB_PASSWORD, DB_DATABASE, 0, NULL, 0))
 	 {
-		
+		printf("Error connect");
 	 }
 
 	 //successfully connected to the database    
@@ -140,9 +201,8 @@ int DB_wrapper::init(void)
  * 
  * @return	void
  */
-DB_wrapper::~DB_wrapper(void)
+DB_wrapper::~DB_wrapper()
 {
-	delete this->m_number_fields;
 	this->disconnet();
 }
 

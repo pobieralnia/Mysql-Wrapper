@@ -9,9 +9,13 @@
 #ifndef _DBWRAPPERCLASS_H_
 #define _DBWRAPPERCLASS_H_
 
-#include <Windows.h>
+#include <Windows.h>	// For mysql.h to run on Windows
+#ifdef __LCC__ 
+#include <winsock.h>	// For windows if __LCC__ is defined (default - winsock.h is included in mysql.h)
+#endif 
 #include <mysql.h>
 #include <string>
+#include <iostream>
 #include <vector>
 
 #define DB_HOST "localhost"
@@ -33,15 +37,23 @@ class DB_wrapper
 		MYSQL_FIELD *m_field;
 
 		// variables
-		int * m_number_fields = new int;
-	
+		int m_number_fields;
+		int unsigned m_row_counter;
+
 	public:
 		DB_wrapper(void);
-		int init(void);		// init connection
+
+		int init(void);		// Init connection
 		void free(void) const;		// Free memory for current query
-		int num_fields(void);	// Number of fields for the result
-		MYSQL_RES * fetch_all(const char *c);		// sql query and fetch all records
-		~DB_wrapper(void);
+		int num_fields(void);		// Number of fields for the result
+		bool query(const char * c);		// Query
+
+		MYSQL_RES * get_result(const char * c);		// Sql query and fetch all records
+		MYSQL_ROW fetch_row();		// Fetch row
+		const char * get_value(int x);
+		const char * get_value();
+
+		~DB_wrapper();
 };
 
 #endif
